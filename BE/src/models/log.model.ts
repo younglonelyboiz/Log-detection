@@ -38,3 +38,4 @@ export class Log extends Entity {
     super(data);
   }
 }
+///// File: BE/src/models/log.model.ts

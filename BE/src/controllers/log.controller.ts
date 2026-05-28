@@ -103,3 +103,5 @@ export class LogController {
     return this.logService.generateSpamFlowLog(action, quantity);
   }
 }
+
+///// File: BE/src/models/log.model.ts

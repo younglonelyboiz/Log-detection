@@ -102,3 +102,4 @@ export class LogService {
     return logs;
   }
 }
+////// File: BE/src/models/log.model.ts

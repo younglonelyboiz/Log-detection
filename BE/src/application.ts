@@ -44,3 +44,4 @@ export class LogDetectionApplication extends BootMixin(
     };
   }
 }
+//// File: BE/src/models/log.model.ts
