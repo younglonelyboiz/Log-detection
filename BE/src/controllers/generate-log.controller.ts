@@ -1,12 +1,12 @@
 import {inject} from '@loopback/core';
 import {requestBody, post, response, getModelSchemaRef} from '@loopback/rest';
-import {LogService} from '../service/log.service';
 import {Log} from '../models/log.model';
+import {GenerateLogService} from '../service/generate-log.service';
 
-export class LogController {
+export class GenerateLogController {
   constructor(
-    @inject('services.LogService')
-    public logService: LogService,
+    @inject('services.GenerateLogService')
+    public generateLogService: GenerateLogService,
   ) {}
 
   @post('/logs/normal')
@@ -24,7 +24,7 @@ export class LogController {
     },
   })
   async getNormalFlowLogs(): Promise<Log[]> {
-    return this.logService.generateNormalFlowLog();
+    return this.generateLogService.generateNormalFlowLog();
   }
 
   @post('/logs/error')
@@ -62,7 +62,7 @@ export class LogController {
     },
   ): Promise<Log[]> {
     const {action, quantity} = request;
-    return this.logService.generateErrorFlowLog(action, quantity);
+    return this.generateLogService.generateErrorFlowLog(action, quantity);
   }
 
   @post('/logs/spam')
@@ -100,7 +100,7 @@ export class LogController {
     },
   ): Promise<Log[]> {
     const {action, quantity} = request;
-    return this.logService.generateSpamFlowLog(action, quantity);
+    return this.generateLogService.generateSpamFlowLog(action, quantity);
   }
 }
 

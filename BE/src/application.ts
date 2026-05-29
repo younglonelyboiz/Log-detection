@@ -9,7 +9,8 @@ import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
-import {LogService} from './service/log.service';
+import {GenerateLogService} from './service/generate-log.service';
+import {LogDetectRepository} from './repositories/log-detect.repository';
 
 export {ApplicationConfig};
 
@@ -18,7 +19,8 @@ export class LogDetectionApplication extends BootMixin(
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
-    this.service(LogService);
+    this.service(GenerateLogService);
+    this.repository(LogDetectRepository);
 
     // Set up the custom sequence
     this.sequence(MySequence);

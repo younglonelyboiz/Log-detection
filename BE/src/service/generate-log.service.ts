@@ -3,7 +3,7 @@ import {Log} from '../models/log.model';
 import {v4 as uuidv4} from 'uuid';
 
 @injectable({scope: BindingScope.TRANSIENT})
-export class LogService {
+export class GenerateLogService {
   // kịch bản Log cho 1 đơn hàng theo flow bình thường
   async generateNormalFlowLog(): Promise<Log[]> {
     const logs: Log[] = [];
@@ -24,7 +24,7 @@ export class LogService {
         orderId,
         action: actions[i],
         userID: userId,
-        timestamp: new Date(baseTime + i * 30000).toISOString(), // Mỗi Log cách nhau 30 giây
+        timestamp: new Date(baseTime + i * 30000), // Mỗi Log cách nhau 30 giây
       });
       logs.push(newlog);
     }
@@ -35,7 +35,7 @@ export class LogService {
         orderId,
         action: actions[i],
         userID: userId,
-        timestamp: new Date(baseTime + i * 6000000).toISOString(), // Mỗi Log cách nhau 100 phút
+        timestamp: new Date(baseTime + i * 6000000), // Mỗi Log cách nhau 100 phút
       });
       logs.push(newLog);
     }
@@ -65,7 +65,7 @@ export class LogService {
         orderId: uuidv4(),
         action: action, // Hành động lỗi được truyền vào
         userID: uuidv4(),
-        timestamp: new Date(baseTime).toISOString(),
+        timestamp: new Date(baseTime),
       });
       logs.push(newLog);
     }
@@ -95,11 +95,10 @@ export class LogService {
         orderId: uuidv4(),
         action: action,
         userID: 'spam001',
-        timestamp: new Date(baseTime + i * 10).toISOString(),
+        timestamp: new Date(baseTime + i * 10),
       });
       logs.push(newLog);
     }
     return logs;
   }
 }
-////// File: BE/src/models/log.model.ts

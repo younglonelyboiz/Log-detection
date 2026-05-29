@@ -1,5 +1,6 @@
 import {ApplicationConfig, LogDetectionApplication} from './application';
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {

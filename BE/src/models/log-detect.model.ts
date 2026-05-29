@@ -1,7 +1,7 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model()
-export class Log extends Entity {
+export class LogDetect extends Entity {
   @property({
     type: 'string',
     id: true,
@@ -34,8 +34,13 @@ export class Log extends Entity {
   })
   timestamp: Date; //thời gian log được tạo ra
 
-  constructor(data?: Partial<Log>) {
+  @property({
+    type: 'string',
+    required: true,
+  })
+  label: string; //nhãn phân loại log (bình thường, lỗi logic, spam)
+
+  constructor(data?: Partial<LogDetect>) {
     super(data);
   }
 }
-///// File: BE/src/models/log.model.ts
