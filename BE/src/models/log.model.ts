@@ -1,14 +1,15 @@
 import {Entity, model, property} from '@loopback/repository';
+import {OrderAction} from '../enums/acction.enum';
 
 @model()
 export class Log extends Entity {
   @property({
     type: 'string',
     id: true,
-    required: true,
-    generated: false, // ID sẽ được tạo thủ công bằng uuidv4() trong LogService
+    generated: true,
+    mongodb: {dataType: 'ObjectId'},
   })
-  id: string; //id của log 1 đơn hàng có nhiều log nên cần ID
+  id?: string;
 
   @property({
     type: 'string',
@@ -19,8 +20,9 @@ export class Log extends Entity {
   @property({
     type: 'string',
     required: true,
+    jsonSchema: {enum: Object.values(OrderAction)},
   })
-  action: string; //hành động được thực hiện "Thanh toán, đặt hàng,...."
+  action: OrderAction; //hành động được thực hiện "Thanh toán, đặt hàng,...."
 
   @property({
     type: 'string',

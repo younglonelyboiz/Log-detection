@@ -1,12 +1,13 @@
 import {inject} from '@loopback/core';
-import {requestBody, post, response, getModelSchemaRef} from '@loopback/rest';
+import {requestBody, post, response} from '@loopback/rest';
 import {Log} from '../models/log.model';
-import {GenerateLogService} from '../service/generate-log.service';
+import {OrderAction} from '../enums/acction.enum';
+import {LogProducerService} from '../service/log-producer.service';
 
 export class GenerateLogController {
   constructor(
-    @inject('services.GenerateLogService')
-    public generateLogService: GenerateLogService,
+    @inject('services.LogProducerService')
+    public logProducerService: LogProducerService,
   ) {}
 
   @post('/logs/normal')
@@ -24,7 +25,7 @@ export class GenerateLogController {
     },
   })
   async getNormalFlowLogs(): Promise<Log[]> {
-    return this.generateLogService.generateNormalFlowLog();
+    return this.logProducerService.publishNormalFlow();
   }
 
   @post('/logs/error')
@@ -48,7 +49,7 @@ export class GenerateLogController {
           schema: {
             type: 'object',
             properties: {
-              action: {type: 'string'},
+              action: {type: 'string', enum: Object.values(OrderAction)},
               quantity: {type: 'number'},
             },
             required: ['action', 'quantity'],
@@ -57,12 +58,12 @@ export class GenerateLogController {
       },
     })
     request: {
-      action: string;
+      action: OrderAction;
       quantity: number;
     },
   ): Promise<Log[]> {
     const {action, quantity} = request;
-    return this.generateLogService.generateErrorFlowLog(action, quantity);
+    return this.logProducerService.publishErrorFlow(action, quantity);
   }
 
   @post('/logs/spam')
@@ -86,7 +87,7 @@ export class GenerateLogController {
           schema: {
             type: 'object',
             properties: {
-              action: {type: 'string'},
+              action: {type: 'string', enum: Object.values(OrderAction)},
               quantity: {type: 'number'},
             },
             required: ['action', 'quantity'],
@@ -95,12 +96,12 @@ export class GenerateLogController {
       },
     })
     request: {
-      action: string;
+      action: OrderAction;
       quantity: number;
     },
   ): Promise<Log[]> {
     const {action, quantity} = request;
-    return this.generateLogService.generateSpamFlowLog(action, quantity);
+    return this.logProducerService.publishSpamFlow(action, quantity);
   }
 }
 

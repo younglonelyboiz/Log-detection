@@ -1,5 +1,5 @@
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, BindingScope} from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -9,8 +9,14 @@ import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
+import {UserService} from './service/user.service';
+import {UserRepository} from './repositories/user.repository';
 import {GenerateLogService} from './service/generate-log.service';
+import {LogRepository} from './repositories/log.repository'; // Import LogRepository
 import {LogDetectRepository} from './repositories/log-detect.repository';
+import {RabbitMQDataSource} from './datasources/rabbitmq.datasource';
+import {LogProducerService} from './service/log-producer.service';
+import {LogConsumerService} from './service/log-consumer.service';
 
 export {ApplicationConfig};
 
@@ -20,7 +26,18 @@ export class LogDetectionApplication extends BootMixin(
   constructor(options: ApplicationConfig = {}) {
     super(options);
     this.service(GenerateLogService);
+    this.service(UserService);
+    this.repository(LogRepository); // Đăng ký LogRepository
+    this.repository(UserRepository);
     this.repository(LogDetectRepository);
+
+    // Đăng ký RabbitMQ & các tiến trình Producer / Consumer
+    this.bind('datasources.RabbitMQ')
+      .toClass(RabbitMQDataSource)
+      .inScope(BindingScope.SINGLETON)
+      .tag('lifeCycleObserver');
+    this.service(LogProducerService);
+    this.service(LogConsumerService);
 
     // Set up the custom sequence
     this.sequence(MySequence);

@@ -5,6 +5,7 @@ const config = {
   name: 'mongodb',
   connector: 'mongodb',
   url: process.env.DB_URL,
+  database: process.env.DB_NAME || 'log_detection',
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };

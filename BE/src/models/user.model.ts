@@ -5,21 +5,29 @@ export class User extends Entity {
   @property({
     type: 'string',
     id: true,
-    required: true,
-    generated: false,
+    generated: true,
+    mongodb: {dataType: 'ObjectId'},
   })
   id: string;
 
   @property({
     type: 'string',
+    required: true,
   })
-  name?: string;
+  name: string;
 
   @property({
     type: 'string',
     required: true,
+    unique: true,
   })
-  status: string; // trạng thái của user (bình thường, nghi ngờ, bị khóa)
+  email: string;
+
+  @property({
+    type: 'string',
+    default: 'Active',
+  })
+  status?: string; // trạng thái của user (bình thường, nghi ngờ, bị khóa)
 
   constructor(data?: Partial<User>) {
     super(data);
