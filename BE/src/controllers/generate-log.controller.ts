@@ -1,4 +1,4 @@
-import {inject} from '@loopback/core';
+import {inject, service} from '@loopback/core';
 import {requestBody, post, response} from '@loopback/rest';
 import {Log} from '../models/log.model';
 import {OrderAction} from '../enums/acction.enum';
@@ -6,7 +6,7 @@ import {LogProducerService} from '../service/log-producer.service';
 
 export class GenerateLogController {
   constructor(
-    @inject('services.LogProducerService')
+    @service(LogProducerService)
     public logProducerService: LogProducerService,
   ) {}
 

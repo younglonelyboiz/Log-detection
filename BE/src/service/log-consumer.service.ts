@@ -4,39 +4,37 @@ import {
   inject,
   lifeCycleObserver,
   LifeCycleObserver,
+  service,
 } from '@loopback/core';
 import {RabbitMQDataSource} from '../datasources/rabbitmq.datasource';
-import {LogDetectRepository} from '../repositories/log-detect.repository';
+import {LogRepository} from '../repositories/log.repository';
 import {repository} from '@loopback/repository';
-import {LogDetect} from '../models/log-detect.model';
 import {Log} from '../models/log.model';
-import {v4 as uuidv4} from 'uuid';
 import {ConsumeMessage} from 'amqplib';
-import {Label} from '../enums/label.enum';
+import {DetectLogService} from './detect-log.service';
 
 @injectable({scope: BindingScope.SINGLETON})
 @lifeCycleObserver('service')
 export class LogConsumerService implements LifeCycleObserver {
   private queueName = 'log_queue'; // Tên hàng đợi RabbitMQ để tiêu thụ log
-  private batchSize = 100; // Số lượng log mỗi batch
+  private batchSize = 50; // Số lượng log mỗi batch
   private messageBuffer: ConsumeMessage[] = []; // Mảng tạm lưu trữ log
   private processInterval?: NodeJS.Timeout;
   private isProcessing = false; // Cờ kiểm soát tránh xử lý trùng lặp
-
+  private detectInterval?: NodeJS.Timeout;
+  private detectInProgress = false; // Cờ kiểm soát tránh chạy đồng thời nhiều lần quét log
   constructor(
     @inject('datasources.RabbitMQ')
     private rabbitMQDataSource: RabbitMQDataSource,
-    @repository(LogDetectRepository)
-    public logDetectRepository: LogDetectRepository,
+    @repository(LogRepository)
+    public logRepository: LogRepository,
+    @service(DetectLogService)
+    public detectLogService: DetectLogService,
   ) {}
 
-  /**
-   * Phương thức này được gọi khi ứng dụng khởi động.
-   */
   async start(): Promise<void> {
     if (!this.rabbitMQDataSource.channel) {
       console.error('RabbitMQ channel not available for consumer. Retrying...');
-      // Có thể thêm logic retry hoặc chờ đợi ở đây
       return;
     }
 
@@ -67,6 +65,19 @@ export class LogConsumerService implements LifeCycleObserver {
     console.log(
       `LogConsumerService started, listening on queue: ${this.queueName} with batch size ${this.batchSize}`,
     );
+
+    this.detectInterval = setInterval(async () => {
+      if (!this.detectInProgress) {
+        this.detectInProgress = true;
+        try {
+          await this.detectLogService.scanLog();
+        } catch (error) {
+          console.error('Error during log scanning in background:', error);
+        } finally {
+          this.detectInProgress = false;
+        }
+      }
+    }, 2000);
   }
 
   private async processBatch(): Promise<void> {
@@ -78,19 +89,19 @@ export class LogConsumerService implements LifeCycleObserver {
     const messagesToProcess = this.messageBuffer.splice(0, this.batchSize);
 
     try {
-      const logsToSave: LogDetect[] = [];
+      const logsToSave: Log[] = [];
 
       for (const msg of messagesToProcess) {
-        const logData: Log = JSON.parse(msg.content.toString());
-        const detectedLog = new LogDetect({
+        const logData = JSON.parse(msg.content.toString());
+        const log = new Log({
           ...logData,
-          label: Label.NORMAL, // --- Logic phân tích / Detect ở đây ---
+          isDetected: false,
         });
-        logsToSave.push(detectedLog);
+        logsToSave.push(log);
       }
 
-      // Lưu tất cả 500 bản ghi vào MongoDB bằng 1 lượt insert duy nhất
-      await this.logDetectRepository.createAll(logsToSave);
+      // Lưu tất cả bản ghi vào MongoDB bằng 1 lượt insert duy nhất
+      await this.logRepository.createAll(logsToSave);
       console.log(
         `Processed and saved batch of ${logsToSave.length} logs to MongoDB.`,
       );
@@ -112,12 +123,12 @@ export class LogConsumerService implements LifeCycleObserver {
     }
   }
 
-  /**
-   * Phương thức này được gọi khi ứng dụng dừng.
-   */
   async stop(): Promise<void> {
     if (this.processInterval) {
       clearInterval(this.processInterval);
+    }
+    if (this.detectInterval) {
+      clearInterval(this.detectInterval);
     }
     console.log('LogConsumerService stopped.');
   }

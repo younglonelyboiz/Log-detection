@@ -8,6 +8,7 @@ const config = {
   database: process.env.DB_NAME || 'log_detection',
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  connectionTimeout: 30000,
 };
 
 // Observe application's life cycle to disconnect the datasource when

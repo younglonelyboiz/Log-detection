@@ -7,7 +7,6 @@ export class LogDetect extends Entity {
   @property({
     type: 'string',
     id: true,
-    generated: true,
     mongodb: {dataType: 'ObjectId'},
   })
   id: string;
@@ -43,6 +42,11 @@ export class LogDetect extends Entity {
     jsonSchema: {enum: Object.values(Label)},
   })
   label: Label; //nhãn phân loại log (bình thường, lỗi logic, spam)
+
+  @property({
+    type: 'string',
+  })
+  reason: string; //lý do phân loại log (nếu có)
 
   constructor(data?: Partial<LogDetect>) {
     super(data);

@@ -5,9 +5,6 @@ import {
   LifeCycleObserver,
 } from '@loopback/core';
 import amqp, {Channel, ChannelModel} from 'amqplib';
-// import dotenv from 'dotenv';
-
-// dotenv.config();
 
 @injectable({scope: BindingScope.SINGLETON})
 @lifeCycleObserver('datasource')

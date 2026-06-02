@@ -1,8 +1,9 @@
-import {injectable, BindingScope, inject} from '@loopback/core';
+import {injectable, BindingScope, inject, service} from '@loopback/core';
 import {RabbitMQDataSource} from '../datasources/rabbitmq.datasource';
 import {GenerateLogService} from './generate-log.service';
 import {OrderAction} from '../enums/acction.enum';
 import {Log} from '../models/log.model';
+
 @injectable({scope: BindingScope.TRANSIENT})
 export class LogProducerService {
   private queueName = 'log_queue';
@@ -10,7 +11,7 @@ export class LogProducerService {
   constructor(
     @inject('datasources.RabbitMQ')
     private rabbitMQDataSource: RabbitMQDataSource,
-    @inject('services.GenerateLogService')
+    @service(GenerateLogService)
     private generateLogService: GenerateLogService,
   ) {}
 

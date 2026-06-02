@@ -9,7 +9,7 @@ export class Log extends Entity {
     generated: true,
     mongodb: {dataType: 'ObjectId'},
   })
-  id?: string;
+  id: string;
 
   @property({
     type: 'string',
@@ -35,6 +35,12 @@ export class Log extends Entity {
     required: true,
   })
   timestamp: Date; //thời gian log được tạo ra
+
+  @property({
+    type: 'boolean',
+    defaul: false,
+  })
+  isDetected: boolean; //nhãn phân loại log (bình thường, lỗi logic, spam)`
 
   constructor(data?: Partial<Log>) {
     super(data);

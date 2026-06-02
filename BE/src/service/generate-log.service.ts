@@ -1,16 +1,26 @@
-import {injectable, BindingScope} from '@loopback/core';
+import {injectable, BindingScope, inject} from '@loopback/core';
 import {Log} from '../models/log.model';
 import {v4 as uuidv4} from 'uuid';
 import {OrderAction} from '../enums/acction.enum';
+import {UserRepository} from '../repositories/user.repository';
+import {repository} from '@loopback/repository';
+import {UserHelper} from '../helper/user.helper';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class GenerateLogService {
+  constructor(
+    @repository(UserRepository)
+    public userRepository: UserRepository,
+    @inject('helper.UserHelper')
+    public userHelper: UserHelper,
+  ) {}
   // kịch bản Log cho 1 đơn hàng theo flow bình thường
   async generateNormalFlowLog(): Promise<Log[]> {
+    // Laays 1 user ngau nhien
+    const userId = await this.userHelper.getRandomUserId();
     const logs: Log[] = [];
-    const actions = Object.values(OrderAction); // Sử dụng enum
-    const userId = uuidv4(); // Giả sử userId cố định cho ví dụ này
-    const orderId = uuidv4(); // Giả sử orderId cố định cho ví dụ này
+    const actions = Object.values(OrderAction);
+    const orderId = uuidv4();
     const baseTime = Date.now();
     for (let i = 0; i < 3; i++) {
       // 3 Log đầu xảy ra nhanh phase này để query vào Redis trước
@@ -58,8 +68,8 @@ export class GenerateLogService {
     for (let i = 0; i < quantity; i++) {
       const newLog = new Log({
         orderId: uuidv4(),
-        action: action, // Hành động lỗi được truyền vào
-        userID: uuidv4(),
+        action: action,
+        userID: await this.userHelper.getRandomUserId(),
         timestamp: new Date(baseTime),
       });
       logs.push(newLog);
@@ -91,7 +101,7 @@ export class GenerateLogService {
       const newLog = new Log({
         orderId: uuidv4(),
         action: action,
-        userID: 'spam001',
+        userID: await this.userHelper.getRandomUserId(),
         timestamp: new Date(baseTime + i * 10),
       });
       logs.push(newLog);
