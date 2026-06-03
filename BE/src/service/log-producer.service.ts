@@ -1,3 +1,5 @@
+// Đẩy log cho rabbit MQ
+
 import {injectable, BindingScope, inject, service} from '@loopback/core';
 import {RabbitMQDataSource} from '../datasources/rabbitmq.datasource';
 import {GenerateLogService} from './generate-log.service';

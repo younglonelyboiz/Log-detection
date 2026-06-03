@@ -10,11 +10,4 @@ export class LogDetectRedisRepository extends BaseRedisRepository<LogDetect> {
   constructor(@inject('datasources.redis') redisDataSource: RedisDataSource) {
     super(redisDataSource);
   }
-
-  protected toInterface(data: string): LogDetect {
-    return JSON.parse(data) as LogDetect;
-  }
-  protected toString(data: LogDetect): string {
-    return JSON.stringify(data);
-  }
 }

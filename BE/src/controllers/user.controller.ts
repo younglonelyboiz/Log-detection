@@ -175,7 +175,7 @@ export class UserController {
       status: string;
     },
   ): Promise<object> {
-    await this.userService.updateUserStatus(id, body.status);
+    await this.userService.updateUser(id, body.status);
 
     return {
       message: 'User status updated successfully',

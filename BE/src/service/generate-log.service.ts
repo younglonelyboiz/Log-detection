@@ -1,23 +1,25 @@
+// Dùng để tạo Log
+
 import {injectable, BindingScope, inject} from '@loopback/core';
 import {Log} from '../models/log.model';
 import {v4 as uuidv4} from 'uuid';
 import {OrderAction} from '../enums/acction.enum';
 import {UserRepository} from '../repositories/user.repository';
 import {repository} from '@loopback/repository';
-import {UserHelper} from '../helper/user.helper';
+import {UserRandomHelper} from '../helper/user-random.helper';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class GenerateLogService {
   constructor(
     @repository(UserRepository)
     public userRepository: UserRepository,
-    @inject('helper.UserHelper')
-    public userHelper: UserHelper,
+    @inject('helper.UserRandomHelper')
+    public UserRandomHelper: UserRandomHelper,
   ) {}
   // kịch bản Log cho 1 đơn hàng theo flow bình thường
   async generateNormalFlowLog(): Promise<Log[]> {
     // Laays 1 user ngau nhien
-    const userId = await this.userHelper.getRandomUserId();
+    const userId = await this.UserRandomHelper.getRandomUserId();
     const logs: Log[] = [];
     const actions = Object.values(OrderAction);
     const orderId = uuidv4();
@@ -53,6 +55,7 @@ export class GenerateLogService {
   ): Promise<Log[]> {
     const logs: Log[] = [];
     const baseTime = Date.now();
+    const userId = await this.UserRandomHelper.getRandomUserId();
     const validActions = [
       OrderAction.THANH_TOAN,
       OrderAction.XAC_NHAN_DON_HANG,
@@ -69,7 +72,7 @@ export class GenerateLogService {
       const newLog = new Log({
         orderId: uuidv4(),
         action: action,
-        userID: await this.userHelper.getRandomUserId(),
+        userID: userId,
         timestamp: new Date(baseTime),
       });
       logs.push(newLog);
@@ -84,6 +87,7 @@ export class GenerateLogService {
   ): Promise<Log[]> {
     const logs: Log[] = [];
     const baseTime = Date.now();
+    const userId = await this.UserRandomHelper.getRandomUserId();
     const validActions = [
       OrderAction.DAT_HANG,
       OrderAction.THANH_TOAN,
@@ -101,7 +105,7 @@ export class GenerateLogService {
       const newLog = new Log({
         orderId: uuidv4(),
         action: action,
-        userID: await this.userHelper.getRandomUserId(),
+        userID: userId,
         timestamp: new Date(baseTime + i * 10),
       });
       logs.push(newLog);

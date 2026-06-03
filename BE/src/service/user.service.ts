@@ -1,13 +1,19 @@
-import {injectable, BindingScope} from '@loopback/core';
+import {injectable, BindingScope, inject} from '@loopback/core';
 import {UserRepository} from '../repositories/user.repository';
 import {repository} from '@loopback/repository';
 import {User} from '../models/user.model';
+import {MongoAndRedisHelper} from '../helper/mongo-and-redis.helper';
+import {UserRedisRepository} from '../repositories/redis/user-redis-repository';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class UserService {
   constructor(
     @repository(UserRepository)
     public userRepository: UserRepository,
+    @repository(UserRedisRepository)
+    public userRedisRepository: UserRedisRepository,
+    @inject('helper.MongoAndRedisHelper')
+    public mongoAndRedisHelper: MongoAndRedisHelper,
   ) {}
   async createUser(name: string, email: string): Promise<void> {
     const newUser = {
@@ -31,12 +37,16 @@ export class UserService {
     return this.userRepository.findById(id);
   }
 
-  async deleteUserById(id: string): Promise<void> {
-    await this.userRepository.deleteById(id);
+  async getUserByIdRedis(id: string): Promise<User | null> {
+    return this.userRedisRepository.findById(id);
   }
 
-  async updateUserStatus(id: string, status: string): Promise<void> {
-    await this.userRepository.updateById(id, {
+  async deleteUserById(id: string): Promise<void> {
+    await this.mongoAndRedisHelper.deleteUserRedisAndMongo(id);
+  }
+
+  async updateUser(id: string, status: string): Promise<void> {
+    await this.mongoAndRedisHelper.updateUserMongoAndCreateUserRedis(id, {
       status,
     });
   }

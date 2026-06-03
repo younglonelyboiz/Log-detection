@@ -10,12 +10,4 @@ export class UserRedisRepository extends BaseRedisRepository<User> {
   constructor(@inject('datasources.redis') redisDataSource: RedisDataSource) {
     super(redisDataSource);
   }
-
-  protected toInterface(data: string): User {
-    return JSON.parse(data) as User;
-  }
-
-  protected toString(data: User): string {
-    return JSON.stringify(data);
-  }
 }

@@ -1,3 +1,5 @@
+// Nhận log từ rabbitMQ và lưu hết vào Mongo
+
 import {
   injectable,
   BindingScope,
@@ -16,8 +18,8 @@ import {DetectLogService} from './detect-log.service';
 @injectable({scope: BindingScope.SINGLETON})
 @lifeCycleObserver('service')
 export class LogConsumerService implements LifeCycleObserver {
-  private queueName = 'log_queue'; // Tên hàng đợi RabbitMQ để tiêu thụ log
-  private batchSize = 50; // Số lượng log mỗi batch
+  private queueName = 'log_queue';
+  private batchSize = 20; // Số lượng log mỗi batch
   private messageBuffer: ConsumeMessage[] = []; // Mảng tạm lưu trữ log
   private processInterval?: NodeJS.Timeout;
   private isProcessing = false; // Cờ kiểm soát tránh xử lý trùng lặp
@@ -95,6 +97,7 @@ export class LogConsumerService implements LifeCycleObserver {
         const logData = JSON.parse(msg.content.toString());
         const log = new Log({
           ...logData,
+          userID: logData.userID || logData.userId, // Đảm bảo map đúng userID
           isDetected: false,
         });
         logsToSave.push(log);

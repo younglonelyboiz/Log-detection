@@ -18,9 +18,11 @@ import {RabbitMQDataSource} from './datasources/rabbitmq.datasource';
 import {LogProducerService} from './service/log-producer.service';
 import {LogConsumerService} from './service/log-consumer.service';
 import {DetectLogService} from './service/detect-log.service';
+import {UserRedisRepository} from './repositories/redis/user-redis-repository';
 import {LogDetectRedisRepository} from './repositories/redis/log-detect-redis.repository';
-import {UserHelper} from './helper/user.helper';
+import {UserRandomHelper} from './helper/user-random.helper';
 import {RedisDataSource} from './datasources/redis.datasource';
+import {MongoAndRedisHelper} from './helper/mongo-and-redis.helper';
 
 export {ApplicationConfig};
 
@@ -36,12 +38,16 @@ export class LogDetectionApplication extends BootMixin(
     this.repository(LogDetectRepository);
     this.service(DetectLogService);
 
-    this.bind('helper.UserHelper').toClass(UserHelper);
+    this.bind('helper.UserRandomHelper').toClass(UserRandomHelper);
+    this.bind('helper.MongoAndRedisHelper').toClass(MongoAndRedisHelper);
+
+    // Đăng ký Redis
 
     this.bind('datasources.redis')
       .toClass(RedisDataSource)
       .inScope(BindingScope.SINGLETON);
     this.repository(LogDetectRedisRepository);
+    this.repository(UserRedisRepository);
 
     // Đăng ký RabbitMQ & các tiến trình Producer / Consumer
     this.bind('datasources.RabbitMQ')

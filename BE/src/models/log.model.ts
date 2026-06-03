@@ -38,7 +38,7 @@ export class Log extends Entity {
 
   @property({
     type: 'boolean',
-    defaul: false,
+    default: false,
   })
   isDetected: boolean; //nhãn phân loại log (bình thường, lỗi logic, spam)`
 
