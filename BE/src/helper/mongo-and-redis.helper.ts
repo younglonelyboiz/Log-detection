@@ -7,6 +7,7 @@ import {repository} from '@loopback/repository';
 import {User} from '../models/user.model';
 import {Label} from '../enums/label.enum';
 import {LogDetect} from '../models/log-detect.model';
+import {UserStatus} from '../enums/user-status.enum';
 
 @injectable()
 export class MongoAndRedisHelper {
@@ -22,44 +23,126 @@ export class MongoAndRedisHelper {
   ) {}
 
   async deleteUserRedisAndMongo(userId: string): Promise<void> {
-    await this.userRepository.deleteById(userId);
-    await this.userRedisRepository.deleteById(userId);
+    try {
+      await this.userRepository.deleteById(userId);
+    } catch (err) {
+      console.error(`Lỗi khi xóa người dùng ${userId} khỏi MongoDB:`, err);
+    }
+
+    try {
+      await this.userRedisRepository.deleteById(userId);
+    } catch (err) {
+      console.error(`Lỗi khi xóa người dùng ${userId} khỏi Redis:`, err);
+    }
   }
 
   async deleteLogDetectRedisAndMongo(logDetectId: string): Promise<void> {
-    await this.logDetectRepository.deleteById(logDetectId);
-    await this.logDetectRedisRepository.deleteById(logDetectId);
+    try {
+      await this.logDetectRepository.deleteById(logDetectId);
+    } catch (err) {
+      console.error(`Lỗi khi xóa log ${logDetectId} khỏi MongoDB:`, err);
+    }
+
+    try {
+      await this.logDetectRedisRepository.deleteById(logDetectId);
+    } catch (err) {
+      console.error(`Lỗi khi xóalog ${logDetectId} khỏi Redis:`, err);
+    }
   }
 
+  // Nếu chỉnh sửa trạng thái người dùng (SPAM,BLOCK) sẽ dược lưu vào cả trog redis
   async updateUserMongoAndCreateUserRedis(
     userId: string,
     updateData: Partial<User>,
   ): Promise<void> {
-    const user = await this.userRepository.findById(userId);
+    let user: User | null = null;
+    try {
+      user = await this.userRepository.findById(userId);
+    } catch (err) {
+      console.error(`Lỗi khi tìm người dùng ${userId} trong MongoDB:`, err);
+      throw err;
+    }
+
     if (user) {
       const updatedUser = {...user, ...updateData};
       const newUser = new User(updatedUser);
-      await this.userRepository.updateById(userId, updateData);
-      await this.userRedisRepository.save(userId, newUser);
+
+      // Cập nhật MongoDB
+      try {
+        await this.userRepository.updateById(userId, updateData);
+      } catch (err) {
+        console.error(
+          `Lỗi khi cập nhật người dùng ${userId} trong MongoDB:`,
+          err,
+        );
+        throw err;
+      }
+
+      // Đồng bộ sang Redis
+      try {
+        if (newUser.status !== UserStatus.ACTIVE) {
+          await this.userRedisRepository.save(userId, newUser);
+        } else {
+          await this.userRedisRepository.deleteById(userId);
+        }
+      } catch (err) {
+        console.error(
+          `Đã cập nhật người dùng ${userId} trong MongoDB, nhưng không đồng bộ được sang Redis:`,
+          err,
+        );
+      }
     }
   }
 
   async checkSpamUser(userID: string): Promise<boolean> {
-    const redisSpam = await this.logDetectRedisRepository.findById(userID);
-    if (redisSpam) return true;
+    try {
+      const redisSpam = await this.logDetectRedisRepository.findById(userID);
+      if (redisSpam) return true;
+    } catch (err) {
+      console.error(
+        `Lỗi khi truy vấn người dùng spam ${userID} từ Redis:`,
+        err,
+      );
+    }
 
-    const mongoSpam = await this.logDetectRepository.findOne({
-      where: {userID, label: Label.SPAM},
-    });
-    if (mongoSpam) {
-      await this.logDetectRedisRepository.save(userID, mongoSpam);
-      return true;
+    try {
+      const mongoSpam = await this.logDetectRepository.findOne({
+        where: {userID, label: Label.SPAM},
+      });
+      if (mongoSpam) {
+        try {
+          await this.logDetectRedisRepository.save(userID, mongoSpam);
+        } catch (err) {
+          console.error(
+            `Lỗi khi lưu cache người dùng spam ${userID} sang Redis:`,
+            err,
+          );
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error(
+        `Lỗi khi truy vấn người dùng spam ${userID} từ MongoDB:`,
+        err,
+      );
     }
     return false;
   }
 
   async saveLogDetect(redisKey: string, logDetect: LogDetect): Promise<void> {
-    await this.logDetectRedisRepository.save(redisKey, logDetect);
-    await this.logDetectRepository.create(logDetect);
+    // Lưu MongoDB trước
+    try {
+      await this.logDetectRepository.create(logDetect);
+    } catch (err) {
+      console.error(`Lỗi khi tạo bản log trong MongoDB:`, err);
+      throw err;
+    }
+
+    // Đồng bộ lên Redis cache
+    try {
+      await this.logDetectRedisRepository.save(redisKey, logDetect);
+    } catch (err) {
+      console.error(` trong MongoDB, nhưng không lưu được sang Redis:`, err);
+    }
   }
 }

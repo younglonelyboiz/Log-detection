@@ -45,10 +45,22 @@ export class UserService {
     await this.mongoAndRedisHelper.deleteUserRedisAndMongo(id);
   }
 
-  async updateUser(id: string, status: string): Promise<void> {
-    await this.mongoAndRedisHelper.updateUserMongoAndCreateUserRedis(id, {
-      status,
-    });
+  async updateUser(id: string, updateData: Partial<User>): Promise<void> {
+    await this.mongoAndRedisHelper.updateUserMongoAndCreateUserRedis(
+      id,
+      updateData,
+    );
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return this.userRepository.find();
+  }
+
+  async getAllUsersRedis(
+    limit: number = 10,
+    offset: number = 0,
+  ): Promise<User[]> {
+    return this.userRedisRepository.findPaginated(limit, offset);
   }
 
   async getAllUsersPaginated(page: number, pageSize: number): Promise<User[]> {

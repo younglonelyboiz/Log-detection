@@ -3,7 +3,7 @@
 import {injectable, BindingScope, inject, service} from '@loopback/core';
 import {RabbitMQDataSource} from '../datasources/rabbitmq.datasource';
 import {GenerateLogService} from './generate-log.service';
-import {OrderAction} from '../enums/acction.enum';
+import {OrderAction} from '../enums/action.enum';
 import {Log} from '../models/log.model';
 
 @injectable({scope: BindingScope.TRANSIENT})
@@ -25,14 +25,8 @@ export class LogProducerService {
   }
 
   // Hàm gọi kịch bản log lỗi và đẩy vào Queue
-  async publishErrorFlow(
-    action: OrderAction,
-    quantity: number,
-  ): Promise<Log[]> {
-    const logs = await this.generateLogService.generateErrorFlowLog(
-      action,
-      quantity,
-    );
+  async publishErrorFlow(quantity: number): Promise<Log[]> {
+    const logs = await this.generateLogService.generateErrorFlowLog(quantity);
     await this.publishToQueue(logs);
     return logs;
   }

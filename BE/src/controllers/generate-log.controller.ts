@@ -1,7 +1,7 @@
 import {inject, service} from '@loopback/core';
 import {requestBody, post, response} from '@loopback/rest';
 import {Log} from '../models/log.model';
-import {OrderAction} from '../enums/acction.enum';
+import {OrderAction} from '../enums/action.enum';
 import {LogProducerService} from '../service/log-producer.service';
 
 export class GenerateLogController {
@@ -49,21 +49,19 @@ export class GenerateLogController {
           schema: {
             type: 'object',
             properties: {
-              action: {type: 'string', enum: Object.values(OrderAction)},
               quantity: {type: 'number'},
             },
-            required: ['action', 'quantity'],
+            required: ['quantity'],
           },
         },
       },
     })
     request: {
-      action: OrderAction;
       quantity: number;
     },
   ): Promise<Log[]> {
-    const {action, quantity} = request;
-    return this.logProducerService.publishErrorFlow(action, quantity);
+    const {quantity} = request;
+    return this.logProducerService.publishErrorFlow(quantity);
   }
 
   @post('/logs/spam')

@@ -3,7 +3,7 @@
 
 import {Log} from '../models/log.model';
 import {Label} from '../enums/label.enum';
-import {OrderAction} from '../enums/acction.enum';
+import {OrderAction} from '../enums/action.enum';
 import {BindingScope, injectable} from '@loopback/core';
 import {LogDetectRepository} from '../repositories/log-detect.repository';
 import {repository} from '@loopback/repository';
@@ -12,6 +12,7 @@ import {LogRepository} from '../repositories/log.repository';
 import {LogDetectRedisRepository} from '../repositories/redis/log-detect-redis.repository';
 import {UserRepository} from '../repositories/user.repository';
 import {MongoAndRedisHelper} from '../helper/mongo-and-redis.helper';
+import {UserStatus} from '../enums/user-status.enum';
 import {inject} from '@loopback/core';
 
 export interface LogDetectResult {
@@ -67,7 +68,7 @@ export class DetectLogService {
       }
 
       if (spammers.has(log.userID)) {
-        // Đã bị đánh dấu spammer trong vòng lặp này -> bỏ qua và cập nhật log đã quét
+        // Đã bị đánh dấu spammer trong vòng lặp này  bỏ qua và cập nhật log đã quét
         await this.logRepository.updateById(log.id!, {isDetected: true});
         continue;
       }
@@ -94,7 +95,6 @@ export class DetectLogService {
 
       if (recentCount.count >= 20) {
         spammers.add(log.userID);
-
         // Cập nhật tất cả log chưa quét của user này thành đã quét
         await this.logRepository.updateAll(
           {isDetected: true},
@@ -120,9 +120,7 @@ export class DetectLogService {
         // Cập nhật trạng thái người dùng trong cả MongoDB và Redis
         await this.mongoAndRedisHelper.updateUserMongoAndCreateUserRedis(
           log.userID,
-          {
-            status: 'SPAM',
-          },
+          {status: UserStatus.SPAM},
         );
 
         console.log(
@@ -164,8 +162,14 @@ export class DetectLogService {
           label,
           reason,
         });
-        await this.logDetectRepository.create(logDetectEntry);
-        await this.logDetectRedisRepository.save(log.id, logDetectEntry);
+        await this.mongoAndRedisHelper.saveLogDetect(
+          log.userID,
+          logDetectEntry,
+        );
+        await this.mongoAndRedisHelper.updateUserMongoAndCreateUserRedis(
+          log.userID,
+          {status: UserStatus.SUSPENDED},
+        );
       }
 
       // Đánh dấu log hiện tại là đã quét

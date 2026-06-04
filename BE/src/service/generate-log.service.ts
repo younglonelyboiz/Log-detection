@@ -3,7 +3,7 @@
 import {injectable, BindingScope, inject} from '@loopback/core';
 import {Log} from '../models/log.model';
 import {v4 as uuidv4} from 'uuid';
-import {OrderAction} from '../enums/acction.enum';
+import {OrderAction} from '../enums/action.enum';
 import {UserRepository} from '../repositories/user.repository';
 import {repository} from '@loopback/repository';
 import {UserRandomHelper} from '../helper/user-random.helper';
@@ -14,12 +14,12 @@ export class GenerateLogService {
     @repository(UserRepository)
     public userRepository: UserRepository,
     @inject('helper.UserRandomHelper')
-    public UserRandomHelper: UserRandomHelper,
+    public userRandomHelper: UserRandomHelper,
   ) {}
   // kịch bản Log cho 1 đơn hàng theo flow bình thường
   async generateNormalFlowLog(): Promise<Log[]> {
     // Laays 1 user ngau nhien
-    const userId = await this.UserRandomHelper.getRandomUserId();
+    const userId = await this.userRandomHelper.getRandomUserId();
     const logs: Log[] = [];
     const actions = Object.values(OrderAction);
     const orderId = uuidv4();
@@ -49,30 +49,22 @@ export class GenerateLogService {
   }
 
   // kịch bản lỗi Logic nghiệp vụ sinh 1 lỗi của flow trừ buớc đầu tiên
-  async generateErrorFlowLog(
-    action: OrderAction,
-    quantity: number,
-  ): Promise<Log[]> {
+  async generateErrorFlowLog(quantity: number): Promise<Log[]> {
     const logs: Log[] = [];
     const baseTime = Date.now();
-    const userId = await this.UserRandomHelper.getRandomUserId();
     const validActions = [
       OrderAction.THANH_TOAN,
       OrderAction.XAC_NHAN_DON_HANG,
       OrderAction.GIAO_HANG,
       OrderAction.HOAN_THANH,
     ]; // Các hành động hợp lệ cho kịch bản lỗi
-    if (!validActions.includes(action as OrderAction)) {
-      throw new Error(
-        'Hành động không hợp lệ. Vui lòng chọn một trong các hành động sau: ' +
-          validActions.join(', '),
-      );
-    }
     for (let i = 0; i < quantity; i++) {
+      const randomAction =
+        validActions[Math.floor(Math.random() * validActions.length)];
       const newLog = new Log({
         orderId: uuidv4(),
-        action: action,
-        userID: userId,
+        action: randomAction,
+        userID: await this.userRandomHelper.getRandomUserId(),
         timestamp: new Date(baseTime),
       });
       logs.push(newLog);
@@ -87,7 +79,7 @@ export class GenerateLogService {
   ): Promise<Log[]> {
     const logs: Log[] = [];
     const baseTime = Date.now();
-    const userId = await this.UserRandomHelper.getRandomUserId();
+    const userId = await this.userRandomHelper.getRandomUserId();
     const validActions = [
       OrderAction.DAT_HANG,
       OrderAction.THANH_TOAN,

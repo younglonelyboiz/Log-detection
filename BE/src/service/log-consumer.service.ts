@@ -40,7 +40,7 @@ export class LogConsumerService implements LifeCycleObserver {
       return;
     }
 
-    // Giới hạn số lượng message chưa được ACK (prefetch count) - lấy tối đa 100 message
+    // Giới hạn số lượng message chưa được ACK lấy tối đa 100 message
     await this.rabbitMQDataSource.channel.prefetch(this.batchSize);
 
     this.rabbitMQDataSource.channel.consume(
@@ -57,7 +57,7 @@ export class LogConsumerService implements LifeCycleObserver {
       {noAck: false},
     );
 
-    // Quét định kỳ mỗi 1 giây để xử lý nốt các log còn sót lại (khi lưu lượng ít không đủ 500)
+    // Quét định kỳ mỗi 1 nốt các log còn sót lại
     this.processInterval = setInterval(() => {
       if (this.messageBuffer.length > 0) {
         this.processBatch().catch(console.error);
@@ -97,7 +97,7 @@ export class LogConsumerService implements LifeCycleObserver {
         const logData = JSON.parse(msg.content.toString());
         const log = new Log({
           ...logData,
-          userID: logData.userID || logData.userId, // Đảm bảo map đúng userID
+          userID: logData.userID,
           isDetected: false,
         });
         logsToSave.push(log);

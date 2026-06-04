@@ -1,5 +1,5 @@
 import {Entity, model, property} from '@loopback/repository';
-import {OrderAction} from '../enums/acction.enum';
+import {OrderAction} from '../enums/action.enum';
 
 @model()
 export class Log extends Entity {

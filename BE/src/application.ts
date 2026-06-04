@@ -18,6 +18,7 @@ import {RabbitMQDataSource} from './datasources/rabbitmq.datasource';
 import {LogProducerService} from './service/log-producer.service';
 import {LogConsumerService} from './service/log-consumer.service';
 import {DetectLogService} from './service/detect-log.service';
+import {LogService} from './service/log.service';
 import {UserRedisRepository} from './repositories/redis/user-redis-repository';
 import {LogDetectRedisRepository} from './repositories/redis/log-detect-redis.repository';
 import {UserRandomHelper} from './helper/user-random.helper';
@@ -37,6 +38,7 @@ export class LogDetectionApplication extends BootMixin(
     this.repository(UserRepository);
     this.repository(LogDetectRepository);
     this.service(DetectLogService);
+    this.service(LogService);
 
     this.bind('helper.UserRandomHelper').toClass(UserRandomHelper);
     this.bind('helper.MongoAndRedisHelper').toClass(MongoAndRedisHelper);

@@ -1,4 +1,5 @@
 import {Entity, model, property} from '@loopback/repository';
+import {UserStatus} from '../enums/user-status.enum';
 
 @model()
 export class User extends Entity {
@@ -25,9 +26,10 @@ export class User extends Entity {
 
   @property({
     type: 'string',
-    default: 'Active',
+    default: UserStatus.ACTIVE,
+    jsonSchema: {enum: Object.values(UserStatus)},
   })
-  status?: string; // trạng thái của user (bình thường, nghi ngờ, bị khóa)
+  status: UserStatus;
 
   constructor(data?: Partial<User>) {
     super(data);

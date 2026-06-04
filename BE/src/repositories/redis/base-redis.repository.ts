@@ -19,12 +19,14 @@ export abstract class BaseRedisRepository<T> {
     return JSON.stringify(data);
   }
 
-  async save(id: string, entity: T): Promise<void> {
+  async save(id: string, entity: T, ttlSeconds: number = 86400): Promise<void> {
     const key = `${this.prefix}:${id}`;
+    const indexKey = `${this.prefix}:index`;
     try {
-      await this.db.set(key, this.toString(entity));
+      await this.db.set(key, this.toString(entity), 'EX', ttlSeconds);
+      await this.db.zadd(indexKey, Date.now(), id);
     } catch (err) {
-      console.error(`Failed to save ${this.prefix} with id ${id}:`, err);
+      console.error(`Lỗi khi lưu ${this.prefix} với id ${id}:`, err);
     }
   }
 
@@ -37,26 +39,54 @@ export abstract class BaseRedisRepository<T> {
       }
       return null;
     } catch (err) {
-      console.error(`Failed to find ${this.prefix} with id ${id}:`, err);
+      console.error(`Lỗi khi tìm ${this.prefix} với id ${id}:`, err);
       return null;
     }
   }
 
   async deleteById(id: string): Promise<void> {
     const key = `${this.prefix}:${id}`;
+    const indexKey = `${this.prefix}:index`;
     try {
       await this.db.del(key);
+      await this.db.zrem(indexKey, id);
     } catch (err) {
-      console.error(`Failed to delete ${this.prefix} with id ${id}:`, err);
+      console.error(`Lỗi khi xóa ${this.prefix} với id ${id}:`, err);
     }
   }
 
-  async updateById(id: string, entity: T): Promise<void> {
+  async updateById(
+    id: string,
+    entity: T,
+    ttlSeconds: number = 86400,
+  ): Promise<void> {
     const key = `${this.prefix}:${id}`;
     try {
-      await this.db.set(key, this.toString(entity), 'XX');
+      await this.db.set(key, this.toString(entity), 'EX', ttlSeconds, 'XX');
     } catch (err) {
-      console.error(`Failed to update ${this.prefix} with id ${id}:`, err);
+      console.error(`Lỗi khi cập nhật ${this.prefix} với id ${id}:`, err);
+    }
+  }
+
+  async findPaginated(limit: number = 10, offset: number = 0): Promise<T[]> {
+    const indexKey = `${this.prefix}:index`;
+    try {
+      const ids = await this.db.zrevrange(indexKey, offset, offset + limit - 1);
+      if (ids.length === 0) return [];
+
+      const keys = ids.map(id => `${this.prefix}:${id}`);
+      const rawData = await this.db.mget(keys);
+
+      const entities: T[] = [];
+      for (const item of rawData) {
+        if (item) {
+          entities.push(this.toInterface(item));
+        }
+      }
+      return entities;
+    } catch (err) {
+      console.error(`Lỗi phân trang ${this.prefix}:`, err);
+      return [];
     }
   }
 
@@ -68,20 +98,3 @@ export abstract class BaseRedisRepository<T> {
     }
   }
 }
-
-// async findAll(limit: number = 10, offset: number = 0): Promise<T[]> {
-//   try {
-//     const keys = await this.db.keys(`${this.prefix}:*`);
-//     const entities: T[] = [];
-//     for (const key of keys) {
-//       const data = await this.db.get(key);
-//       if (data) {
-//         entities.push(this.toInterface(data));
-//       }
-//     }
-//     return entities;
-//   } catch (err) {
-//     console.error(`Failed to find all ${this.prefix} entities:`, err);
-//     return [];
-//   }
-// }

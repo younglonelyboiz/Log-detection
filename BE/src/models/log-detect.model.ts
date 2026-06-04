@@ -1,5 +1,5 @@
 import {Entity, model, property} from '@loopback/repository';
-import {OrderAction} from '../enums/acction.enum';
+import {OrderAction} from '../enums/action.enum';
 import {Label} from '../enums/label.enum';
 
 @model()

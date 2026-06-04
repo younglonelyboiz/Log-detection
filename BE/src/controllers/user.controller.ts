@@ -10,11 +10,15 @@ import {
   patch,
 } from '@loopback/rest';
 import {User} from '../models/user.model';
+import {inject} from '@loopback/core';
+import {MongoAndRedisHelper} from '../helper/mongo-and-redis.helper';
 
 export class UserController {
   constructor(
     @service(UserService)
     public userService: UserService,
+    @inject('helper.MongoAndRedisHelper')
+    public mongoAndRedisHelper: MongoAndRedisHelper,
   ) {}
 
   @post('/create/users')
@@ -93,6 +97,50 @@ export class UserController {
     await this.userService.createBatchUsers(request);
     return {message: 'Users created successfully'};
   }
+  @get('/users/cache')
+  @response(200, {
+    description: 'Lấy danh sách người dùng từ Redis',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: {
+            'x-ts-type': User,
+          },
+        },
+      },
+    },
+  })
+  async getAllUsersRedis(
+    @param.query.number('limit') limit: number = 10,
+    @param.query.number('offset') offset: number = 0,
+  ): Promise<User[]> {
+    return this.userService.getAllUsersRedis(limit, offset);
+  }
+
+  @get('users/{id}/cache')
+  @response(200, {
+    description: 'Lấy thông tin người dùng từ Redis',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            message: {type: 'string'},
+            user: {
+              'x-ts-type': User,
+            },
+          },
+        },
+      },
+    },
+  })
+  async getUserByIdRedis(@param.path.string('id') id: string): Promise<object> {
+    return {
+      message: 'User found',
+      user: await this.userService.getUserByIdRedis(id),
+    };
+  }
 
   @get('/users/{id}')
   @response(200, {
@@ -142,7 +190,7 @@ export class UserController {
     };
   }
 
-  @patch('/users/{id}/status')
+  @patch('/users/{id}/update')
   @response(200, {
     description: 'Cập nhật trạng thái người dùng',
     content: {
@@ -156,26 +204,20 @@ export class UserController {
       },
     },
   })
-  async updateUserStatus(
+  async updateUser(
     @param.path.string('id') id: string,
     @requestBody({
       content: {
         'application/json': {
           schema: {
             type: 'object',
-            required: ['status'],
-            properties: {
-              status: {type: 'string'},
-            },
           },
         },
       },
     })
-    body: {
-      status: string;
-    },
+    body: Partial<User>,
   ): Promise<object> {
-    await this.userService.updateUser(id, body.status);
+    await this.userService.updateUser(id, body);
 
     return {
       message: 'User status updated successfully',
