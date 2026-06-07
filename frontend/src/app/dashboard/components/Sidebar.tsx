@@ -1,44 +1,66 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Layout, Menu } from "antd";
+import type { MenuProps } from "antd";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  DashOutlined,
+  UserOutlined,
+  VerifiedOutlined,
+  SlidersOutlined,
+} from "@ant-design/icons";
 import style from "../dashboard.module.scss";
+
+const { Sider } = Layout;
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
-  const menuItems = [
-    { name: "Dashboard", path: "/dashboard", icon: "fa-solid fa-chart-pie" },
+  const menuItems: MenuProps["items"] = [
     {
-      name: "Quản lý Users",
-      path: "/dashboard/users",
-      icon: "fa-regular fa-user",
+      key: "/dashboard",
+      icon: <DashOutlined />,
+      label: "Dashboard",
     },
     {
-      name: "Quản lý nhật ký",
-      path: "/dashboard/logs",
-      icon: "fa-solid fa-terminal",
+      key: "/dashboard/users",
+      icon: <UserOutlined />,
+      label: "Users",
     },
-    { name: "Cài đặt", path: "/dashboard/settings", icon: "fa-solid fa-gear" },
+    {
+      key: "/dashboard/logs",
+      icon: <VerifiedOutlined />,
+      label: "Logs",
+    },
+    {
+      key: "/dashboard/settings",
+      icon: <SlidersOutlined />,
+      label: "Settings",
+    },
   ];
 
   return (
-    <aside className={style.sidebar}>
-      <div className={style.logo}>
-        <div className={style.logoIcon}></div>
-        <div className={style.logoText}>Log Dashboard</div>
+    <Sider breakpoint="lg" collapsedWidth="0" className={style.customSider}>
+      <div className={style.logoArea}>
+        <h2
+          style={{
+            color: "#0ea5e9",
+            fontWeight: 800,
+            fontSize: "1.2rem",
+          }}
+        >
+          Giám Sát Nhật Kí
+        </h2>
       </div>
 
-      <ul className={style.menuList}>
-        {menuItems.map((item) => (
-          <li key={item.path} className={style.menuItem}>
-            <Link href={item.path}>
-              <i className={item.icon}></i> {item.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </aside>
+      <Menu
+        mode="inline"
+        selectedKeys={[pathname]}
+        items={menuItems}
+        onClick={({ key }) => router.push(key)}
+      />
+    </Sider>
   );
 }

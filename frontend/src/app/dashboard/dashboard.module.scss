@@ -1,1 +1,32 @@
-@import "../../styles/variable.scss";
+@import "../../styles/variable";
+
+.customSider {
+  border-right: 1px solid $border-color;
+  height: 100vh;
+  position: sticky !important;
+  top: 0;
+  left: 0;
+}
+
+.logoArea {
+  height: $header-height;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.customHeader {
+  background: $bg-card !important;
+  padding: 0 24px !important;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: $header-height !important;
+  line-height: $header-height !important;
+}
+
+.customContent {
+  padding: 24px;
+  overflow-y: auto;
+}
