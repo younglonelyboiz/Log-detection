@@ -10,9 +10,6 @@ export class UserRandomHelper {
     private userRepository: UserRepository,
   ) {}
   async getRandomUserId(): Promise<string> {
-    // const users = await this.userRepository.find({
-    //   limit: 10,
-    // });
     const index = await this.userRepository.count();
     const indexRandom = Math.floor(Math.random() * index.count);
     const users = await this.userRepository.find({

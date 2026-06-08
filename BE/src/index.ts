@@ -27,6 +27,13 @@ if (require.main === module) {
       // upon stop, set its value to `0`.
       // See https://www.npmjs.com/package/stoppable
       gracePeriodForClose: 5000, // 5 seconds
+      cors: {
+        origin: '*',
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
+        credentials: true,
+      },
       openApiSpec: {
         // useful when used with OpenAPI-to-GraphQL to locate your application
         setServersFromRequest: true,

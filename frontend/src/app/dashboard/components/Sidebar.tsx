@@ -5,23 +5,27 @@ import { Layout, Menu } from "antd";
 import type { MenuProps } from "antd";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  DashOutlined,
+  HomeOutlined,
   UserOutlined,
   VerifiedOutlined,
-  SlidersOutlined,
 } from "@ant-design/icons";
 import style from "../dashboard.module.scss";
 
 const { Sider } = Layout;
 
-export default function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onCollapse: (collapsed: boolean) => void;
+}
+
+export default function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
   const menuItems: MenuProps["items"] = [
     {
       key: "/dashboard",
-      icon: <DashOutlined />,
+      icon: <HomeOutlined />,
       label: "Dashboard",
     },
     {
@@ -34,29 +38,34 @@ export default function Sidebar() {
       icon: <VerifiedOutlined />,
       label: "Logs",
     },
-    {
-      key: "/dashboard/settings",
-      icon: <SlidersOutlined />,
-      label: "Settings",
-    },
   ];
 
   return (
-    <Sider breakpoint="lg" collapsedWidth="0" className={style.customSider}>
+    <Sider
+      breakpoint="lg"
+      collapsedWidth="0"
+      collapsible
+      collapsed={collapsed}
+      onCollapse={onCollapse}
+      theme="light"
+      trigger={null}
+      className={style.customSider}
+    >
       <div className={style.logoArea}>
-        <h2
+        <span
           style={{
             color: "#0ea5e9",
             fontWeight: 800,
             fontSize: "1.2rem",
           }}
         >
-          Giám Sát Nhật Kí
-        </h2>
+          Hệ thống<br></br>giám sát
+        </span>
       </div>
 
       <Menu
         mode="inline"
+        theme="light"
         selectedKeys={[pathname]}
         items={menuItems}
         onClick={({ key }) => router.push(key)}
