@@ -1,40 +1,26 @@
 import api from "./api";
-import { Label } from "../enums/label.enum";
-
-export interface LogDetect {
-  id?: string;
-  orderId: string;
-  action: string;
-  userID: string;
-  timestamp: string;
-  label: Label;
-  reason?: string;
-}
-
-export interface RawLog {
-  id: string;
-  orderId: string;
-  action: string;
-  userID: string;
-  timestamp: string;
-  isDetected: boolean;
-}
+import { LogDetect } from "../redux/logsSlice";
 
 export const logService = {
-  getLogsCache: async (limit: number = 50, offset: number = 0): Promise<LogDetect[]> => {
+  getLogsCache: async (
+    limit: number = 1000,
+    offset: number = 0,
+  ): Promise<LogDetect[]> => {
     const response = await api.get<LogDetect[]>("/logs/cache", {
       params: { limit, offset },
     });
     return response.data;
   },
 
-  getLogsByUser: async (userId: string): Promise<RawLog[]> => {
-    const response = await api.get<RawLog[]>(`/logs/user/${userId}`);
-    return response.data;
-  },
+  // getLogsByUser: async (userId: string): Promise<RawLog[]> => {
+  //   const response = await api.get<RawLog[]>(`/logs/user/${userId}`);
+  //   return response.data;
+  // },
 
   getDetectedLogsByUser: async (userId: string): Promise<LogDetect[]> => {
-    const response = await api.get<LogDetect[]>(`/logs/detected/user/${userId}`);
+    const response = await api.get<LogDetect[]>(
+      `/logs/detected/user/${userId}`,
+    );
     return response.data;
   },
 

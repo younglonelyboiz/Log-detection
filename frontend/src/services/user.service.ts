@@ -1,12 +1,5 @@
 import api from "./api";
-import { UserStatus } from "../enums/user-status.enum";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  status: UserStatus;
-}
+import { User } from "../redux/usersSlice";
 
 export const userService = {
   getUsers: async (page: number = 1, pageSize: number = 100): Promise<User[]> => {

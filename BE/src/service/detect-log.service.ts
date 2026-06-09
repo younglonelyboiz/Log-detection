@@ -108,7 +108,7 @@ export class DetectLogService {
           userID: log.userID,
           timestamp: log.timestamp,
           label: Label.SPAM,
-          reason: `Người dùng thực hiện ${recentCount.count} hành động trong vòng 5s.`,
+          reason: `Người dùng thực hiện >= ${recentCount.count} hành động trong vòng 5s.`,
         });
 
         // Lưu vào MongoDB và Redis với key là userID (để checkSpamUser dùng được)

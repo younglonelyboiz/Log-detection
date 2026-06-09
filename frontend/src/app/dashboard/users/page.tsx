@@ -14,20 +14,18 @@ import {
 import { LockOutlined, UnlockOutlined } from "@ant-design/icons";
 import { userService } from "../../../services/user.service";
 import { UserStatus } from "../../../enums/user-status.enum";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  status: UserStatus;
-}
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import { User, updateUserStatus } from "../../../redux/usersSlice";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const users: User[] = [];
-
 export default function UsersPage() {
+  const dispatch = useDispatch();
+  const users = useSelector((state: RootState) => state.users.users);
+  const loading = useSelector((state: RootState) => state.users.loading);
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
     {},
@@ -38,11 +36,12 @@ export default function UsersPage() {
       user.status === UserStatus.BLOCKED
         ? UserStatus.ACTIVE
         : UserStatus.BLOCKED;
-    setActionLoading((prev) => ({ ...prev, [user.id]: true }));
+    // setActionLoading((prev) => ({ ...prev, [user.id]: true }));
 
     try {
       await userService.updateUserStatus(user.id, newStatus);
 
+      dispatch(updateUserStatus({ id: user.id, status: newStatus }));
       message.success(
         `Đã ${newStatus === UserStatus.BLOCKED ? "chặn" : "kích hoạt lại"} ${user.name}!`,
       );
@@ -50,7 +49,7 @@ export default function UsersPage() {
       console.error(err);
       message.error("Gặp lỗi khi cập nhật trạng thái.");
     } finally {
-      setActionLoading((prev) => ({ ...prev, [user.id]: false }));
+      // setActionLoading((prev) => ({ ...prev, [user.id]: false }));
     }
   };
 
@@ -82,7 +81,7 @@ export default function UsersPage() {
       key: "status",
       render: (status: UserStatus) => {
         let color = "success";
-        let label = "Đang hoạt động";
+        let label = "Binh thường";
 
         if (status === UserStatus.BLOCKED) {
           color = "error";
@@ -160,7 +159,7 @@ export default function UsersPage() {
             style={{ width: 180 }}
           >
             <Option value="all">Tất cả Trạng thái</Option>
-            <Option value={UserStatus.ACTIVE}>Đang hoạt động</Option>
+            <Option value={UserStatus.ACTIVE}>Bình Thường</Option>
             <Option value={UserStatus.BLOCKED}>Đã khóa</Option>
             <Option value={UserStatus.SPAM}>Phát hiện Spam</Option>
             <Option value={UserStatus.SUSPENDED}>Nghi Ngờ</Option>
@@ -173,6 +172,7 @@ export default function UsersPage() {
           rowKey="id"
           pagination={{ pageSize: 10 }}
           size="middle"
+          loading={loading}
           locale={{ emptyText: "Không có người dùng nào." }}
         />
       </Card>

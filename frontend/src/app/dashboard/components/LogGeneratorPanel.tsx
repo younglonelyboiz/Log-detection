@@ -76,7 +76,12 @@ export default function LogGeneratorPanel() {
 
       <Radio.Group
         value={scenario}
-        onChange={(e) => setScenario(e.target.value)}
+        onChange={(e) => {
+          setScenario(e.target.value);
+          form.setFieldsValue({
+            quantity: e.target.value === Label.SPAM ? 20 : 1,
+          });
+        }}
         optionType="button"
         buttonStyle="solid"
         style={{ marginBottom: 24, display: "flex", gap: "8px" }}
@@ -105,7 +110,7 @@ export default function LogGeneratorPanel() {
         form={form}
         layout="vertical"
         onFinish={handleGenerate}
-        initialValues={{ quantity: 1, action: OrderAction.DAT_HANG }}
+        initialValues={{ quantity: null, action: OrderAction.DAT_HANG }}
       >
         {scenario === Label.NORMAL && (
           <div style={{ padding: "8px 0 20px 0" }}>
@@ -119,14 +124,14 @@ export default function LogGeneratorPanel() {
 
         {scenario === Label.ERROR && (
           <Form.Item
-            label="Số lượng sản phẩm vượt mức (Gây lỗi logic)"
+            label="Số lượng log lỗi logic"
             name="quantity"
             rules={[{ required: true }]}
           >
             <InputNumber
-              min={11}
+              min={1}
               max={100}
-              placeholder="Chọn số lượng > 10"
+              placeholder="Chọn số lượng log lỗi logic"
               style={{ width: "100%" }}
             />
           </Form.Item>
@@ -149,7 +154,7 @@ export default function LogGeneratorPanel() {
             </Form.Item>
 
             <Form.Item
-              label="Số lượng hành động gửi đồng thời (Spam count)"
+              label="Số lượng hành động gửi đồng thời"
               name="quantity"
               rules={[{ required: true }]}
             >

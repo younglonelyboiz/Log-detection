@@ -97,4 +97,30 @@ export abstract class BaseRedisRepository<T> {
       await this.save(id, updatedData);
     }
   }
+
+  async deleteAll(): Promise<void> {
+    try {
+      const pipeline = this.db.pipeline();
+      const stream = this.db.scanStream({
+        match: `${this.prefix}:*`,
+        count: 100,
+      });
+      await new Promise((resolve, reject) => {
+        stream.on('data', (keys: string[]) => {
+          keys.forEach(key => {
+            pipeline.del(key);
+          });
+          pipeline.exec();
+        });
+        stream.on('end', () => {
+          resolve(null);
+        });
+        stream.on('error', err => {
+          reject(err);
+        });
+      });
+    } catch (err) {
+      console.error(`Lỗi khi xóa tất cả ${this.prefix}:`, err);
+    }
+  }
 }

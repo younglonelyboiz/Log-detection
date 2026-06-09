@@ -69,4 +69,13 @@ export class UserService {
       limit: pageSize,
     });
   }
+
+  async resetAllUser(): Promise<void> {
+    try {
+      await this.mongoAndRedisHelper.resetStatusAllUser();
+    } catch (err) {
+      console.error('Error in UserService.resetAllUser:', err);
+      throw err;
+    }
+  }
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "../styles/global.scss";
 import StyledComponentsRegistry from "./ant-registry";
 import { ConfigProvider } from "antd";
+import { ReduxProvider } from "../redux/provider";
 
 export const metadata: Metadata = {
   title: "Log Dashboard",
@@ -25,16 +26,18 @@ export default function RootLayout({
       </head>
       <body>
         <StyledComponentsRegistry>
-          <ConfigProvider
-            theme={{
-              token: {
-                colorPrimary: "#0ea5e9",
-                borderRadius: 8,
-              },
-            }}
-          >
-            {children}
-          </ConfigProvider>
+          <ReduxProvider>
+            <ConfigProvider
+              theme={{
+                token: {
+                  colorPrimary: "#0ea5e9",
+                  borderRadius: 8,
+                },
+              }}
+            >
+              {children}
+            </ConfigProvider>
+          </ReduxProvider>
         </StyledComponentsRegistry>
       </body>
     </html>

@@ -15,6 +15,8 @@ export default function DashboardLayout({
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
+  // hook theo dõi logs thời gian thực tại layout chung (Đã tắt do không dùng Redux)
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />

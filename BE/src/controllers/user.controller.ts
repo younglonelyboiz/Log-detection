@@ -244,4 +244,23 @@ export class UserController {
   ): Promise<User[]> {
     return this.userService.getAllUsersPaginated(page, pageSize);
   }
+
+  @post('/reset/users')
+  @response(200, {
+    description: 'Reset trạng thái người dùng',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            message: {type: 'string'},
+          },
+        },
+      },
+    },
+  })
+  async resetAllUser(): Promise<object> {
+    await this.userService.resetAllUser();
+    return {message: 'Users reset successfully'};
+  }
 }

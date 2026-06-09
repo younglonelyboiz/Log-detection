@@ -145,4 +145,14 @@ export class MongoAndRedisHelper {
       console.error(` trong MongoDB, nhưng không lưu được sang Redis:`, err);
     }
   }
+
+  async resetStatusAllUser(): Promise<void> {
+    try {
+      await this.userRepository.updateAll({status: UserStatus.ACTIVE});
+      await this.userRedisRepository.deleteAll();
+    } catch (err) {
+      console.error(`Lỗi khi cập nhật trạng thái hàng loạt cho Users:`, err);
+      throw err;
+    }
+  }
 }

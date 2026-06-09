@@ -6,6 +6,7 @@ import { Label } from "../../../enums/label.enum";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
 const logs: any[] = [];
 
 export default function LogsPage() {
