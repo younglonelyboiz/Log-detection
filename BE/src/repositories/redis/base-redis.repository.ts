@@ -1,6 +1,6 @@
 import Redis from 'ioredis';
-import {RedisDataSource} from '../../datasources/redis.datasource';
-import {injectable, inject} from '@loopback/core';
+import { RedisDataSource } from '../../datasources/redis.datasource';
+import { injectable, inject } from '@loopback/core';
 
 @injectable()
 export abstract class BaseRedisRepository<T> {
@@ -22,9 +22,11 @@ export abstract class BaseRedisRepository<T> {
   async save(id: string, entity: T, ttlSeconds: number = 86400): Promise<void> {
     const key = `${this.prefix}:${id}`;
     const indexKey = `${this.prefix}:index`;
+    const now = Date.now();
     try {
       await this.db.set(key, this.toString(entity), 'EX', ttlSeconds);
-      await this.db.zadd(indexKey, Date.now(), id);
+      await this.db.zadd(indexKey, now, id);
+
     } catch (err) {
       console.error(`Lỗi khi lưu ${this.prefix} với id ${id}:`, err);
     }
@@ -93,7 +95,7 @@ export abstract class BaseRedisRepository<T> {
   async updatePartialById(id: string, updateData: Partial<T>): Promise<void> {
     const currentData = await this.findById(id);
     if (currentData) {
-      const updatedData = {...currentData, ...updateData};
+      const updatedData = { ...currentData, ...updateData };
       await this.save(id, updatedData);
     }
   }

@@ -16,6 +16,7 @@ export function useLogWatcher() {
   const existingLogs = useSelector((state: RootState) => state.logs.logs);
 
   const existingLogsRef = useRef<LogDetect[]>(existingLogs);
+  const isFirstLoadRef = useRef<boolean>(true);
 
   useEffect(() => {
     existingLogsRef.current = existingLogs;
@@ -27,11 +28,9 @@ export function useLogWatcher() {
         // 1. Lấy Logs từ Redis Cache
         const fetchedLogs = await logService.getLogsCache(1000, 0);
 
-        // Tìm các log mới chưa tồn tại trong Redux store
         const currentLogs = existingLogsRef.current;
 
-        // Nếu không phải lần tải đầu tiên
-        if (currentLogs.length > 0) {
+        if (!isFirstLoadRef.current) {
           const newLogs = fetchedLogs.filter(
             (newLog) =>
               !currentLogs.some((existing) => existing.id === newLog.id),
@@ -49,7 +48,7 @@ export function useLogWatcher() {
             } else if (log.label === Label.SPAM) {
               notification.warning({
                 message: "Cảnh Báo Hành Vi Spam",
-                description: `Tài khoản ${log.userID} spam hành động "${log.action}" trên đơn hàng ${log.orderId}. Lý do: ${log.reason || "Yêu cầu quá nhanh"}`,
+                description: `Tài khoản ${log.userID} spam hành động "${log.action}" trên đơn hàng ${log.orderId}.`,
                 placement: "topRight",
                 duration: 5,
               });
@@ -57,11 +56,13 @@ export function useLogWatcher() {
           });
         }
 
+        isFirstLoadRef.current = false;
+
         // Lưu danh sách logs vào Redux store
         dispatch(addLogs(fetchedLogs));
 
-        // 2. Lấy danh sách đầy đủ Users từ MongoDB
-        const fetchedUsers = await userService.getUsers();
+        // 2. Lấy danh sách blacklist Users từ Redis
+        const fetchedUsers = await userService.getCachedUsers(1000, 0);
         dispatch(setUsers(fetchedUsers));
       } catch (error) {
         console.error(error);
@@ -76,4 +77,26 @@ export function useLogWatcher() {
 
     return () => clearInterval(intervalId);
   }, [dispatch]);
+
+  // Tự động bắn 1 đơn hàng thành công mỗi 10 giây 
+  // useEffect(() => {
+  //   const autoGenerateLog = async () => {
+  //     try {
+  //       const result = await logService.generateNormalLog();
+  //       if (result) {
+  //         notification.success({
+  //           message: "Đơn hàng thành công",
+  //           description: `Đơn hàng đã hoàn thành (Bot)`,
+  //           placement: "topRight",
+  //           duration: 5,
+  //         });
+  //       }
+  //     } catch (err) {
+  //       console.error("Lỗi tự động tạo log thành công:", err);
+  //     }
+  //   };
+
+  //   const intervalId = setInterval(autoGenerateLog, 20000);
+  //   ; return () => clearInterval(intervalId);
+  // }, []);
 }

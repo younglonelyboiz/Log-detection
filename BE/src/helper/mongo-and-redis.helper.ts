@@ -96,8 +96,8 @@ export class MongoAndRedisHelper {
 
   async checkSpamUser(userID: string): Promise<boolean> {
     try {
-      const redisSpam = await this.logDetectRedisRepository.findById(userID);
-      if (redisSpam) return true;
+      const user = await this.userRedisRepository.findById(userID);
+      if (user && user.status === UserStatus.SPAM) return true;
     } catch (err) {
       console.error(
         `Lỗi khi truy vấn người dùng spam ${userID} từ Redis:`,
@@ -106,12 +106,10 @@ export class MongoAndRedisHelper {
     }
 
     try {
-      const mongoSpam = await this.logDetectRepository.findOne({
-        where: {userID, label: Label.SPAM},
-      });
-      if (mongoSpam) {
+      const user = await this.userRepository.findById(userID);
+      if (user && user.status === UserStatus.SPAM) {
         try {
-          await this.logDetectRedisRepository.save(userID, mongoSpam);
+          await this.userRedisRepository.save(userID, user);
         } catch (err) {
           console.error(
             `Lỗi khi lưu cache người dùng spam ${userID} sang Redis:`,

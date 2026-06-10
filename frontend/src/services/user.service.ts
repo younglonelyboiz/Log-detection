@@ -2,9 +2,13 @@ import api from "./api";
 import { User } from "../redux/usersSlice";
 
 export const userService = {
-  getUsers: async (page: number = 1, pageSize: number = 100): Promise<User[]> => {
-    const response = await api.get<User[]>("/users", {
-      params: { page, pageSize },
+  getUsers: async (
+    page: number = 1,
+    pageSize: number = 10,
+    status?: string,
+  ): Promise<{ data: User[]; total: number }> => {
+    const response = await api.get<{ data: User[]; total: number }>("/users", {
+      params: { page, pageSize, status },
     });
     return response.data;
   },

@@ -1,20 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
-import { Table, Tag, Card, Select, Space, Typography } from "antd";
+import React, { useState, useEffect } from "react";
+import { Table, Tag, Card, Select, Space, Typography, message } from "antd";
 import { Label } from "../../../enums/label.enum";
+import { logService } from "../../../services/log.service";
+import { LogDetect } from "../../../redux/logsSlice";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const logs: any[] = [];
-
 export default function LogsPage() {
+  const [logs, setLogs] = useState<LogDetect[]>([]);
   const [labelFilter, setLabelFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
 
-  const filteredLogs = logs.filter((log) => {
-    return labelFilter === "all" ? true : log.label === labelFilter;
-  });
+  const fetchLogs = (page: number, label: string) => {
+    const limit = 10;
+    const offset = (page - 1) * limit;
+    logService.getAllDetectedLogs(limit, offset, label)
+      .then((res) => {
+        setLogs(res.data);
+        setTotal(res.total);
+      })
+      .catch((err) => {
+        console.error(err);
+        message.error("Lỗi khi tải nhật ký từ máy chủ");
+      });
+  };
+
+  useEffect(() => {
+    fetchLogs(currentPage, labelFilter);
+  }, [currentPage, labelFilter]);
 
   const columns = [
     {
@@ -27,7 +44,9 @@ export default function LogsPage() {
       title: "Thời gian",
       dataIndex: "timestamp",
       key: "timestamp",
-      render: (text: string) => <Text>{text}</Text>,
+      render: (text: string) => <Text>{new Date(text).toLocaleString("vi-VN")}</Text>,
+      sorter: (a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      defaultSortOrder: 'descend' as const,
     },
     {
       title: "ID Đơn Hàng",
@@ -106,7 +125,10 @@ export default function LogsPage() {
           <Select
             defaultValue={Label.ERROR}
             value={labelFilter}
-            onChange={(value) => setLabelFilter(value)}
+            onChange={(value) => {
+              setLabelFilter(value);
+              setCurrentPage(1);
+            }}
             style={{ width: 180 }}
           >
             <Option value="all">Tất cả phân loại</Option>
@@ -117,10 +139,15 @@ export default function LogsPage() {
         </Space>
 
         <Table
-          dataSource={filteredLogs}
+          dataSource={logs}
           columns={columns}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: currentPage,
+            pageSize: 10,
+            total: total,
+            onChange: (page) => setCurrentPage(page),
+          }}
           size="middle"
           locale={{ emptyText: "Không có nhật ký nào." }}
         />

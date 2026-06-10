@@ -1,12 +1,12 @@
 // Đẩy log cho rabbit MQ
 
-import {injectable, BindingScope, inject, service} from '@loopback/core';
-import {RabbitMQDataSource} from '../datasources/rabbitmq.datasource';
-import {GenerateLogService} from './generate-log.service';
-import {OrderAction} from '../enums/action.enum';
-import {Log} from '../models/log.model';
+import { injectable, BindingScope, inject, service } from '@loopback/core';
+import { RabbitMQDataSource } from '../datasources/rabbitmq.datasource';
+import { GenerateLogService } from './generate-log.service';
+import { OrderAction } from '../enums/action.enum';
+import { Log } from '../models/log.model';
 
-@injectable({scope: BindingScope.TRANSIENT})
+@injectable({ scope: BindingScope.TRANSIENT })
 export class LogProducerService {
   private queueName = 'log_queue';
 
@@ -15,7 +15,7 @@ export class LogProducerService {
     private rabbitMQDataSource: RabbitMQDataSource,
     @service(GenerateLogService)
     private generateLogService: GenerateLogService,
-  ) {}
+  ) { }
 
   // Hàm gọi kịch bản log bình thường và đẩy vào Queue
   async publishNormalFlow(): Promise<Log[]> {
@@ -49,14 +49,14 @@ export class LogProducerService {
     }
 
     // Đảm bảo queue tồn tại trước khi gửi. durable: true giúp queue không bị mất khi RabbitMQ restart
-    await channel.assertQueue(this.queueName, {durable: true});
+    await channel.assertQueue(this.queueName, { durable: true });
 
     for (const log of logs) {
       const messageBuffer = Buffer.from(JSON.stringify(log));
 
       // Đẩy từng log vào queue
       channel.sendToQueue(this.queueName, messageBuffer, {
-        persistent: true, // Lưu message xuống đĩa cứng của RabbitMQ để tránh mất dữ liệu (Zero Data Loss)
+        persistent: true, // Lưu message xuống đĩa cứng của RabbitMQ để tránh mất dữ liệu 
       });
     }
 

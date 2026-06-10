@@ -10,14 +10,37 @@ export interface User {
 
 interface UsersState {
   users: User[];
+  stats: {
+    suspended: number;
+    spam: number;
+  };
   loading: boolean;
   error: string | null;
 }
 
 const initialState: UsersState = {
   users: [],
+  stats: {
+    suspended: 0,
+    spam: 0,
+  },
   loading: false,
   error: null,
+};
+
+const updateStats = (state: UsersState) => {
+  let suspendedCount = 0;
+  let spamCount = 0;
+
+  state.users.forEach((user) => {
+    if (user.status === UserStatus.SUSPENDED) suspendedCount++;
+    else if (user.status === UserStatus.SPAM) spamCount++;
+  });
+
+  state.stats = {
+    suspended: suspendedCount,
+    spam: spamCount,
+  };
 };
 
 const usersSlice = createSlice({
@@ -26,6 +49,7 @@ const usersSlice = createSlice({
   reducers: {
     setUsers: (state, action: PayloadAction<User[]>) => {
       state.users = action.payload;
+      updateStats(state);
     },
     updateUserStatus: (
       state,
@@ -35,6 +59,7 @@ const usersSlice = createSlice({
       const user = state.users.find((u) => u.id === id);
       if (user) {
         user.status = status;
+        updateStats(state);
       }
     },
     setLoading: (state, action: PayloadAction<boolean>) => {

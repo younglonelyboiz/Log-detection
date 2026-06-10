@@ -63,11 +63,24 @@ export class UserService {
     return this.userRedisRepository.findPaginated(limit, offset);
   }
 
-  async getAllUsersPaginated(page: number, pageSize: number): Promise<User[]> {
-    return this.userRepository.find({
-      offset: (page - 1) * pageSize,
-      limit: pageSize,
-    });
+  async getAllUsersPaginated(
+    page: number,
+    pageSize: number,
+    status?: string,
+  ): Promise<{ data: User[]; total: number }> {
+    const whereClause: any = {};
+    if (status && status !== 'all') {
+      whereClause.status = status;
+    }
+    const [data, total] = await Promise.all([
+      this.userRepository.find({
+        where: whereClause,
+        offset: (page - 1) * pageSize,
+        limit: pageSize,
+      }),
+      this.userRepository.count(whereClause),
+    ]);
+    return { data, total: total.count };
   }
 
   async resetAllUser(): Promise<void> {

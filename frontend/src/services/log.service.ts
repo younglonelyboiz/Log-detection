@@ -24,6 +24,17 @@ export const logService = {
     return response.data;
   },
 
+  getAllDetectedLogs: async (
+    limit?: number,
+    offset?: number,
+    label?: string,
+  ): Promise<{ data: LogDetect[]; total: number }> => {
+    const response = await api.get<{ data: LogDetect[]; total: number }>("/logs/detected", {
+      params: { limit, offset, label },
+    });
+    return response.data;
+  },
+
   generateNormalLog: async (): Promise<any> => {
     const response = await api.post("/logs/normal");
     return response.data;
@@ -36,6 +47,16 @@ export const logService = {
 
   generateSpamLog: async (action: string, quantity: number): Promise<any> => {
     const response = await api.post("/logs/spam", { action, quantity });
+    return response.data;
+  },
+
+  getDashboardStats: async (): Promise<{
+    total: number;
+    totalUsers: number;
+    successfulOrders: number;
+    normal: number;
+  }> => {
+    const response = await api.get("/dashboard/stats");
     return response.data;
   },
 };

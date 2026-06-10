@@ -230,9 +230,10 @@ export class UserController {
     content: {
       'application/json': {
         schema: {
-          type: 'array',
-          items: {
-            'x-ts-type': User,
+          type: 'object',
+          properties: {
+            data: { type: 'array', items: { 'x-ts-type': User } },
+            total: { type: 'number' },
           },
         },
       },
@@ -241,8 +242,9 @@ export class UserController {
   async getAllUsersPaginated(
     @param.query.number('page') page: number = 1,
     @param.query.number('pageSize') pageSize: number = 10,
-  ): Promise<User[]> {
-    return this.userService.getAllUsersPaginated(page, pageSize);
+    @param.query.string('status') status?: string,
+  ): Promise<object> {
+    return this.userService.getAllUsersPaginated(page, pageSize, status);
   }
 
   @post('/reset/users')
